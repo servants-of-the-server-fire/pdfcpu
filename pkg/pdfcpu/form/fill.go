@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/pdfcpu/pdfcpu/pkg/font"
+	"github.com/pdfcpu/pdfcpu/pkg/log"
 	pdffont "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/font"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/primitives"
@@ -1088,7 +1089,8 @@ func fillWidgetAnnots(
 		if ft == nil {
 			ft = d.NameEntry("FT")
 			if ft == nil {
-				return errors.Errorf("pdfcpu: corrupt form field %s: missing entry FT\n%s", id, d)
+				log.Info.Printf("skipping form field %s: missing entry FT", id)
+				continue
 			}
 		}
 
@@ -1104,7 +1106,8 @@ func fillWidgetAnnots(
 		}
 
 		if err != nil {
-			return err
+			log.Info.Printf("skipping form field %s during fill: %v", id, err)
+			continue
 		}
 	}
 
