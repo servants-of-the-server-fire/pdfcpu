@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pdfcpu/pdfcpu/pkg/log"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/primitives"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
@@ -767,7 +768,8 @@ func exportPageFields(xRefTable *model.XRefTable, i int, form *Form, m map[strin
 		if ft == nil {
 			ft = d.NameEntry("FT")
 			if ft == nil {
-				return errors.New("pdfcpu: corrupt form field: missing entry FT")
+				log.Info.Printf("skipping form field %s: missing entry FT", id)
+				continue
 			}
 		}
 
@@ -775,7 +777,8 @@ func exportPageFields(xRefTable *model.XRefTable, i int, form *Form, m map[strin
 		if o, found := d.Find("TU"); found {
 			s, err := types.StringOrHexLiteral(o)
 			if err != nil {
-				return err
+				log.Info.Printf("skipping form field %s: %v", id, err)
+				continue
 			}
 			if s != nil {
 				altName = *s
@@ -783,7 +786,8 @@ func exportPageFields(xRefTable *model.XRefTable, i int, form *Form, m map[strin
 		}
 
 		if err := exportPageField(*ft, xRefTable, i, form, d, id, name, altName, locked, ok, ff); err != nil {
-			return err
+			log.Info.Printf("skipping form field %s: %v", id, err)
+			continue
 		}
 	}
 

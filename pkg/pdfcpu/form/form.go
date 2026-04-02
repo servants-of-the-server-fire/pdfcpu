@@ -770,7 +770,8 @@ func collectPageFields(
 		}
 
 		if err := collectPageField(xRefTable, d, p, fi, fm, fs, maxWidth); err != nil {
-			return err
+			log.Info.Printf("skipping form field: %v", err)
+			continue
 		}
 	}
 
