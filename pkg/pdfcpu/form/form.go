@@ -138,11 +138,32 @@ func fullyQualifiedFieldName(xRefTable *model.XRefTable, indRef types.IndirectRe
 
 	pIndRef := d.IndirectRefEntry("Parent")
 	if pIndRef == nil {
+		// Try exact indirect reference match first.
 		for i := 0; i < len(fields); i++ {
 			if ir, ok := fields[i].(types.IndirectRef); ok && ir == indRef {
 				*id = thisID
 				*name = thisName
 				return true, nil
+			}
+		}
+		// Fallback: match by field name for merged field+widget dicts.
+		if thisName != "" {
+			for i := 0; i < len(fields); i++ {
+				if ir, ok := fields[i].(types.IndirectRef); ok {
+					fd, err := xRefTable.DereferenceDict(ir)
+					if err != nil || len(fd) == 0 {
+						continue
+					}
+					fn, err := fd.StringOrHexLiteralEntry("T")
+					if err != nil || fn == nil {
+						continue
+					}
+					if *fn == thisName {
+						*id = thisID
+						*name = thisName
+						return true, nil
+					}
+				}
 			}
 		}
 		return false, nil

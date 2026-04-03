@@ -985,6 +985,13 @@ func fillTextField(
 
 	da := d.StringEntry("DA")
 
+	// If DA is missing, the value is still stored but appearance can't be regenerated.
+	// The viewer will render it using its own default appearance.
+	if da == nil {
+		*ok = true
+		return nil
+	}
+
 	kids := d.ArrayEntry("Kids")
 	if len(kids) > 0 {
 
@@ -1055,7 +1062,7 @@ func fillWidgetAnnots(
 
 		found, fi, err := isField(ctx.XRefTable, indRef, fields)
 		if err != nil {
-			return err
+			continue
 		}
 		if !found {
 			continue
@@ -1106,7 +1113,16 @@ func fillWidgetAnnots(
 		}
 
 		if err != nil {
-			log.Info.Printf("skipping form field %s during fill: %v", id, err)
+			// Fallback: set the value directly on the field dict.
+			// The appearance won't be regenerated but viewers will render it.
+			vals, fill, _ := fillDetails(id, name, FTText, JSON)
+			if fill && len(vals) > 0 && vals[0] != "" {
+				d["/V"] = types.StringLiteral(vals[0])
+				*ok = true
+				log.Info.Printf("form field %s: set value directly (appearance skipped): %v", id, err)
+			} else {
+				log.Info.Printf("skipping form field %s during fill: %v", id, err)
+			}
 			continue
 		}
 	}

@@ -1794,7 +1794,12 @@ func validateAnnotationsArray(xRefTable *model.XRefTable, a types.Array) (types.
 
 		hasTrapNet, err = validateAnnotationDict(xRefTable, annotDict)
 		if err != nil {
-			return nil, err
+			if xRefTable.ValidationMode == model.ValidationRelaxed {
+				// Skip validation error but still collect the annotation
+				// so form fill can find widget annotations.
+			} else {
+				return nil, err
+			}
 		}
 
 		// Collect annotation.
@@ -1803,6 +1808,9 @@ func validateAnnotationsArray(xRefTable *model.XRefTable, a types.Array) (types.
 
 		ann, err := pdfcpu.Annotation(xRefTable, annotDict)
 		if err != nil {
+			if xRefTable.ValidationMode == model.ValidationRelaxed {
+				continue
+			}
 			return nil, err
 		}
 
