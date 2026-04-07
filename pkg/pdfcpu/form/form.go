@@ -720,6 +720,17 @@ func collectPageField(
 
 	if arr := d.ArrayEntry("Rect"); arr != nil {
 		f.Rect = types.RectForArray(arr)
+	} else if kids := d.ArrayEntry("Kids"); f.Rect == nil && kids != nil {
+		for _, kid := range kids {
+			if kir, ok := kid.(types.IndirectRef); ok {
+				if kd, err := xRefTable.DereferenceDict(kir); err == nil && kd != nil {
+					if karr := kd.ArrayEntry("Rect"); karr != nil {
+						f.Rect = types.RectForArray(karr)
+						break
+					}
+				}
+			}
+		}
 	}
 
 	ft := fi.ft
